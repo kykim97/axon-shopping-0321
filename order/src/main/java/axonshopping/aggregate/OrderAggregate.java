@@ -42,12 +42,9 @@ public class OrderAggregate {
     }
 
     @CommandHandler
-    public OrderAggregate(CancelCommand command) {
+    public void handle(CancelCommand command) {
         OrderCanceledEvent event = new OrderCanceledEvent();
         BeanUtils.copyProperties(command, event);
-
-        //TODO: check key generation is properly done
-        if (event.getId() == null) event.setId(createUUID());
 
         apply(event);
     }
@@ -65,7 +62,6 @@ public class OrderAggregate {
 
     @EventSourcingHandler
     public void on(OrderCanceledEvent event) {
-        BeanUtils.copyProperties(event, this);
         //TODO: business logic here
 
     }

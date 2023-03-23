@@ -56,23 +56,18 @@ public class DeliveryController {
             });
     }
 
-    @RequestMapping(value = "/deliveries", method = RequestMethod.POST)
-    public CompletableFuture cancelDelivery(
-        @RequestBody CancelDeliveryCommand cancelDeliveryCommand
-    ) throws Exception {
+    @RequestMapping(
+        value = "/deliveries/{id}/canceldelivery",
+        method = RequestMethod.PUT,
+        produces = "application/json;charset=UTF-8"
+    )
+    public CompletableFuture cancelDelivery(@PathVariable("id") String id)
+        throws Exception {
         System.out.println("##### /delivery/cancelDelivery  called #####");
-
+        CancelDeliveryCommand cancelDeliveryCommand = new CancelDeliveryCommand();
+        cancelDeliveryCommand.setId(id);
         // send command
-        return commandGateway
-            .send(cancelDeliveryCommand)
-            .thenApply(id -> {
-                DeliveryAggregate resource = new DeliveryAggregate();
-                BeanUtils.copyProperties(cancelDeliveryCommand, resource);
-
-                resource.setId((String) id);
-
-                return new ResponseEntity<>(hateoas(resource), HttpStatus.OK);
-            });
+        return commandGateway.send(cancelDeliveryCommand);
     }
 
     @Autowired
@@ -94,6 +89,12 @@ public class DeliveryController {
         EntityModel<DeliveryAggregate> model = EntityModel.of(resource);
 
         model.add(Link.of("/deliveries/" + resource.getId()).withSelfRel());
+
+        model.add(
+            Link
+                .of("/deliveries/" + resource.getId() + "/canceldelivery")
+                .withRel("canceldelivery")
+        );
 
         model.add(
             Link

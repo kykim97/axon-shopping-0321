@@ -51,16 +51,24 @@ public class DeliveryViewCQRSHandlerReusingAggregate {
     }
 
     @EventHandler
-    public void whenDeliveryCanceled_then_CREATE(DeliveryCanceledEvent event)
+    public void whenDeliveryCanceled_then_UPDATE(DeliveryCanceledEvent event)
         throws Exception {
-        DeliveryReadModel entity = new DeliveryReadModel();
-        DeliveryAggregate aggregate = new DeliveryAggregate();
-        aggregate.on(event);
+        repository
+            .findById(event.getId())
+            .ifPresent(entity -> {
+                DeliveryAggregate aggregate = new DeliveryAggregate();
 
-        BeanUtils.copyProperties(aggregate, entity);
+                BeanUtils.copyProperties(entity, aggregate);
+                aggregate.on(event);
+                BeanUtils.copyProperties(aggregate, entity);
 
-        repository.save(entity);
+                repository.save(entity);
 
-        queryUpdateEmitter.emit(DeliveryViewQuery.class, query -> true, entity);
+                queryUpdateEmitter.emit(
+                    DeliveryViewSingleQuery.class,
+                    query -> query.getId().equals(event.getId()),
+                    entity
+                );
+            });
     }
 }

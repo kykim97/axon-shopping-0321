@@ -41,12 +41,9 @@ public class DeliveryAggregate {
     }
 
     @CommandHandler
-    public DeliveryAggregate(CancelDeliveryCommand command) {
+    public void handle(CancelDeliveryCommand command) {
         DeliveryCanceledEvent event = new DeliveryCanceledEvent();
         BeanUtils.copyProperties(command, event);
-
-        //TODO: check key generation is properly done
-        if (event.getId() == null) event.setId(createUUID());
 
         apply(event);
     }
@@ -64,7 +61,6 @@ public class DeliveryAggregate {
 
     @EventSourcingHandler
     public void on(DeliveryCanceledEvent event) {
-        BeanUtils.copyProperties(event, this);
         //TODO: business logic here
 
     }
