@@ -9,8 +9,6 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier;
 @Data
 public class CancelDeliveryCommand {
 
-    private String id; // Please comment here if you want user to enter the id directly
-    private String orderId;
-    private String customerId;
-    private String address;
+    @TargetAggregateIdentifier
+    private String id;
 }

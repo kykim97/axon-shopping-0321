@@ -51,16 +51,24 @@ public class OrderViewCQRSHandlerReusingAggregate {
     }
 
     @EventHandler
-    public void whenOrderCanceled_then_CREATE(OrderCanceledEvent event)
+    public void whenOrderCanceled_then_UPDATE(OrderCanceledEvent event)
         throws Exception {
-        OrderReadModel entity = new OrderReadModel();
-        OrderAggregate aggregate = new OrderAggregate();
-        aggregate.on(event);
+        repository
+            .findById(event.getId())
+            .ifPresent(entity -> {
+                OrderAggregate aggregate = new OrderAggregate();
 
-        BeanUtils.copyProperties(aggregate, entity);
+                BeanUtils.copyProperties(entity, aggregate);
+                aggregate.on(event);
+                BeanUtils.copyProperties(aggregate, entity);
 
-        repository.save(entity);
+                repository.save(entity);
 
-        queryUpdateEmitter.emit(OrderViewQuery.class, query -> true, entity);
+                queryUpdateEmitter.emit(
+                    OrderViewSingleQuery.class,
+                    query -> query.getId().equals(event.getId()),
+                    entity
+                );
+            });
     }
 }
